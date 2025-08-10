@@ -1,14 +1,26 @@
-export default async function ChannelPage({
+"use client";
+
+import { useState } from "react";
+import ChannelHeader from "@/components/ChannelView/ChannelHeader";
+import ChannelView from "@/components/ChannelView/ChannelView";
+import ChannelSettingsPane from "@/components/InfoPanel/ChannelSettingsPane";
+
+export default function ChannelPage({
   params,
 }: {
   params: Promise<{ workspaceId: string; channelId: string }>;
 }) {
-  const { workspaceId, channelId } = await params;
+  const [showSettings, setShowSettings] = useState(true);
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-semibold text-black">Channel: {channelId}</h1>
-      <p className="text-gray-600 mt-2">Workspace: {workspaceId}</p>
+    <div className="flex h-screen bg-gray-50">
+      <div className="flex flex-col flex-1">
+        <ChannelHeader
+          onToggleSettings={() => setShowSettings(!showSettings)}
+        />
+        <ChannelView />
+      </div>
+      {showSettings && <ChannelSettingsPane />}
     </div>
   );
 }
