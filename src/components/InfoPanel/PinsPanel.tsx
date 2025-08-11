@@ -1,4 +1,5 @@
 import avatarUrl from "@/assets/images/hero.jpeg";
+import Image from "next/image";
 import { PinIcon, MoreHorizontalIcon, MessageCircleIcon } from "lucide-react";
 
 interface PinnedMessage {
@@ -48,7 +49,12 @@ const pinnedMessages: PinnedMessage[] = [
   },
 ];
 
-export default function PinsPanel() {
+interface PinsPanelProps {
+  channelId: string;
+  workspaceId: string;
+}
+
+export default function PinsPanel({ channelId, workspaceId }: PinsPanelProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900">Pinned Messages</h3>
@@ -62,9 +68,11 @@ export default function PinsPanel() {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center space-x-2">
-                  <img
+                  <Image
                     src={message.author.avatar}
                     alt={message.author.name}
+                    width={32}
+                    height={32}
                     className="w-8 h-8 rounded-full"
                   />
                   <div>

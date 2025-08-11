@@ -3,7 +3,7 @@
 import { ChevronDown, Plus } from "lucide-react";
 import { useDirectMessagesStore } from "@/store/directMessagesStore";
 import DirectMessageItem from "./DirectMessageItem";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export default function DirectMessagesList() {
@@ -16,9 +16,13 @@ export default function DirectMessagesList() {
     }
   }, [directMessages.length, initializeDirectMessages]);
 
-  const nonFavoriteDirectMessages = directMessages.filter(
-    (dm) => !dm.isFavorite
-  );
+  const nonFavoriteDirectMessages = useMemo(() => {
+    return directMessages
+      .filter((dm) => !dm.isFavorite)
+      .sort(
+        (a, b) => Number(Boolean(b.isOnline)) - Number(Boolean(a.isOnline))
+      );
+  }, [directMessages]);
 
   return (
     <div>

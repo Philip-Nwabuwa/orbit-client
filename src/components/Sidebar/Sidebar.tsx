@@ -10,10 +10,10 @@ import { useNavigationSync } from "@/hooks/useNavigationSync";
 import {
   Sparkles,
   File,
-  BookMarked,
   Mail,
   MessageSquareMore,
   ClipboardList,
+  Bookmark,
 } from "lucide-react";
 import Link from "next/link";
 import { useNavigationStore } from "@/store/navigationStore";
@@ -21,7 +21,7 @@ import { useNavigationStore } from "@/store/navigationStore";
 const sidebarItems: SidebarItem[] = [
   { icon: Sparkles, label: "Assistant" },
   { icon: File, label: "Drafts" },
-  { icon: BookMarked, label: "Saved Items" },
+  { icon: Bookmark, label: "Saved Items" },
   { icon: Mail, label: "Inbox", unreadCount: 100 },
   { icon: MessageSquareMore, label: "Direct Messages", unreadCount: 5 },
 ];

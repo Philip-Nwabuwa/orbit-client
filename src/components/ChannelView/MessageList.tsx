@@ -5,8 +5,19 @@ import ImageViewer from "./ImageViewer";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useMessageStore } from "@/store/messageStore";
 
-export default function MessageList() {
-  const { messages, initializeMessages } = useMessageStore();
+interface MessageListProps {
+  channelId?: string;
+  dmUserId?: string;
+  workspaceId: string;
+}
+
+export default function MessageList({ channelId, dmUserId, workspaceId }: MessageListProps) {
+  const { 
+    getMessagesForChannel, 
+    getMessagesForDM, 
+    initializeChannelMessages,
+    initializeDMMessages
+  } = useMessageStore();
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hasMountedRef = useRef(false);
@@ -17,11 +28,21 @@ export default function MessageList() {
     null
   );
 
+  // Get messages based on context
+  const messages = channelId 
+    ? getMessagesForChannel(channelId, workspaceId)
+    : dmUserId 
+    ? getMessagesForDM(dmUserId, workspaceId)
+    : [];
+
   useEffect(() => {
-    if (messages.length === 0) {
-      initializeMessages();
+    // Initialize messages for current context
+    if (channelId && messages.length === 0) {
+      initializeChannelMessages(channelId, workspaceId);
+    } else if (dmUserId && messages.length === 0) {
+      initializeDMMessages(dmUserId, workspaceId);
     }
-  }, [messages.length, initializeMessages]);
+  }, [channelId, dmUserId, workspaceId, messages.length, initializeChannelMessages, initializeDMMessages]);
 
   // Track if user is manually scrolling
   useEffect(() => {

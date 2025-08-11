@@ -6,7 +6,12 @@ import PinsPanel from "./PinsPanel";
 import FilesPanel from "./FilesPanel";
 import LinksPanel from "./LinksPanel";
 
-export default function ChannelSettingsPane() {
+interface ChannelSettingsPaneProps {
+  channelId: string;
+  workspaceId: string;
+}
+
+export default function ChannelSettingsPane({ channelId, workspaceId }: ChannelSettingsPaneProps) {
   const [activeTab, setActiveTab] = useState("info");
 
   const tabs = [
@@ -21,17 +26,17 @@ export default function ChannelSettingsPane() {
       case "info":
         return (
           <div className="space-y-8">
-            <InfoPanel />
-            <LinkedThreads />
-            <MembersList />
+            <InfoPanel channelId={channelId} workspaceId={workspaceId} />
+            <LinkedThreads channelId={channelId} workspaceId={workspaceId} />
+            <MembersList channelId={channelId} workspaceId={workspaceId} />
           </div>
         );
       case "pins":
-        return <PinsPanel />;
+        return <PinsPanel channelId={channelId} workspaceId={workspaceId} />;
       case "files":
-        return <FilesPanel />;
+        return <FilesPanel channelId={channelId} workspaceId={workspaceId} />;
       case "links":
-        return <LinksPanel />;
+        return <LinksPanel channelId={channelId} workspaceId={workspaceId} />;
       default:
         return null;
     }

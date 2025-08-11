@@ -52,7 +52,7 @@ export default function TaskDetailsSheet({
               <p className="text-xs text-gray-500">Assignee</p>
               <div className="flex items-center gap-2 mt-1">
                 {task.assigneeAvatarUrl && (
-                  <img
+                  <Image
                     src={task.assigneeAvatarUrl}
                     alt={task.assigneeName || "Assignee"}
                     className="h-6 w-6 rounded-full"

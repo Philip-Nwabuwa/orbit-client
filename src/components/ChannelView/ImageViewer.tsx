@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import {
   X,
   Plus,
@@ -169,7 +170,7 @@ export default function ImageViewer({ url, alt, onClose }: ImageViewerProps) {
         onMouseLeave={onMouseUp}
         onWheel={onWheel}
       >
-        <img
+        <Image
           src={url}
           alt={alt || "image"}
           className="rounded-lg shadow-2xl select-none"

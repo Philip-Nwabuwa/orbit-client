@@ -4,6 +4,7 @@ import React from "react";
 import { ChevronDown, Plus } from "lucide-react";
 import { useChannelStore } from "@/store/channelStore";
 import ChannelListItem from "./ChannelListItem";
+import AddChannelModal from "./AddChannelModal";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +12,7 @@ export default function ChannelList() {
   const { channels, initializeChannels, getChannelHierarchy } =
     useChannelStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isAddChannelModalOpen, setIsAddChannelModalOpen] = useState(false);
 
   useEffect(() => {
     if (channels.length === 0) {
@@ -74,7 +76,10 @@ export default function ChannelList() {
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <Plus className="size-4 text-gray-400 hover:text-gray-600 cursor-pointer" />
+          <Plus 
+            className="size-4 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors" 
+            onClick={() => setIsAddChannelModalOpen(true)}
+          />
         </div>
       </div>
       <div
@@ -87,6 +92,11 @@ export default function ChannelList() {
           renderChannelWithChildren(channel, 0)
         )}
       </div>
+      
+      <AddChannelModal 
+        open={isAddChannelModalOpen} 
+        onOpenChange={setIsAddChannelModalOpen} 
+      />
     </div>
   );
 }

@@ -24,9 +24,7 @@ export default function AppDock() {
 
   // TODO: Replace with real workspaces from API/store
   const dockItems = [
-    { id: "1", label: "Workspace 1", imageSrc: placeholderImage },
-    { id: "2", label: "Workspace 2", imageSrc: placeholderImage },
-    { id: "yrgGdg234j", label: "Design", imageSrc: placeholderImage },
+    { id: "yrgGdg234j", label: "Workspace 1", imageSrc: placeholderImage },
   ];
 
   return (

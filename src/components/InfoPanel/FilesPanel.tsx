@@ -7,6 +7,7 @@ import {
   FileTextIcon,
   ArchiveIcon,
 } from "lucide-react";
+import Image from "next/image";
 
 interface FileItem {
   id: string;
@@ -85,7 +86,15 @@ const getFileIcon = (type: FileItem["type"]) => {
   }
 };
 
-export default function FilesPanel() {
+interface FilesPanelProps {
+  channelId: string;
+  workspaceId: string;
+}
+
+export default function FilesPanel({
+  channelId,
+  workspaceId,
+}: FilesPanelProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -112,9 +121,11 @@ export default function FilesPanel() {
                   </span>
                 </div>
                 <div className="flex items-center space-x-1 mt-1">
-                  <img
+                  <Image
                     src={file.uploadedBy.avatar}
                     alt={file.uploadedBy.name}
+                    width={16}
+                    height={16}
                     className="w-4 h-4 rounded-full"
                   />
                   <span className="text-xs text-gray-500">

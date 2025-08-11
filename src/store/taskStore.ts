@@ -40,7 +40,8 @@ const initialTasks: TaskItem[] = [
     status: "inProgress",
     priority: "high",
     assigneeName: "Daniel Anderson",
-    assigneeAvatarUrl: "/avatar1.jpg",
+    assigneeAvatarUrl:
+      "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&w=778&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     tags: ["Internal", "Urgent"],
     workspaceId: DEFAULT_WORKSPACE_ID,
     channelId: "6",
@@ -58,7 +59,8 @@ const initialTasks: TaskItem[] = [
     status: "todo",
     priority: "medium",
     assigneeName: "William Johnson",
-    assigneeAvatarUrl: "/avatar3.jpg",
+    assigneeAvatarUrl:
+      "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     tags: ["Internal", "Lead"],
     workspaceId: DEFAULT_WORKSPACE_ID,
     channelId: "6",
@@ -76,7 +78,8 @@ const initialTasks: TaskItem[] = [
     status: "inProgress",
     priority: "high",
     assigneeName: "Emily Davis",
-    assigneeAvatarUrl: "/avatar5.jpg",
+    assigneeAvatarUrl:
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=2564&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     tags: ["Internal"],
     workspaceId: DEFAULT_WORKSPACE_ID,
     channelId: "6",
@@ -94,7 +97,8 @@ const initialTasks: TaskItem[] = [
     status: "done",
     priority: "low",
     assigneeName: "Andrew Miller",
-    assigneeAvatarUrl: "/avatar2.jpg",
+    assigneeAvatarUrl:
+      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=2680&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     tags: ["Internal", "Lead"],
     workspaceId: DEFAULT_WORKSPACE_ID,
     channelId: "6",
@@ -112,7 +116,8 @@ const initialTasks: TaskItem[] = [
     status: "todo",
     priority: "low",
     assigneeName: "William Johnson",
-    assigneeAvatarUrl: "/avatar3.jpg",
+    assigneeAvatarUrl:
+      "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     tags: ["Lead"],
     workspaceId: DEFAULT_WORKSPACE_ID,
     channelId: "6",
@@ -130,7 +135,8 @@ const initialTasks: TaskItem[] = [
     status: "todo",
     priority: "low",
     assigneeName: "Emily Davis",
-    assigneeAvatarUrl: "/avatar5.jpg",
+    assigneeAvatarUrl:
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=2564&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     tags: ["Lead"],
     workspaceId: DEFAULT_WORKSPACE_ID,
     channelId: "6",
@@ -146,7 +152,8 @@ const initialTasks: TaskItem[] = [
     status: "inProgress",
     priority: "medium",
     assigneeName: "Andrew Miller",
-    assigneeAvatarUrl: "/avatar2.jpg",
+    assigneeAvatarUrl:
+      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=2680&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     tags: ["Urgent"],
     workspaceId: DEFAULT_WORKSPACE_ID,
     channelId: "6",
@@ -161,7 +168,8 @@ const initialTasks: TaskItem[] = [
     status: "done",
     priority: "medium",
     assigneeName: "Daniel Anderson",
-    assigneeAvatarUrl: "/avatar1.jpg",
+    assigneeAvatarUrl:
+      "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&w=778&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     tags: ["Urgent"],
     workspaceId: DEFAULT_WORKSPACE_ID,
     channelId: "6",
@@ -176,7 +184,8 @@ const initialTasks: TaskItem[] = [
     status: "done",
     priority: "low",
     assigneeName: "Emily Davis",
-    assigneeAvatarUrl: "/avatar5.jpg",
+    assigneeAvatarUrl:
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=2564&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     tags: ["Lead"],
     workspaceId: DEFAULT_WORKSPACE_ID,
     channelId: "6",

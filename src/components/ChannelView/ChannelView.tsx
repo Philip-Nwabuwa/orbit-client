@@ -1,16 +1,21 @@
 import MessageComposer from "./MessageComposer";
 import MessageList from "./MessageList";
 
-export default function ChannelView() {
+interface ChannelViewProps {
+  channelId?: string;
+  workspaceId: string;
+}
+
+export default function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
   return (
     <div className="flex flex-col flex-1 bg-white min-h-0">
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto">
-        <MessageList />
+        <MessageList channelId={channelId} workspaceId={workspaceId} />
       </div>
 
       {/* Composer */}
-      <MessageComposer />
+      <MessageComposer channelId={channelId} workspaceId={workspaceId} />
     </div>
   );
 }

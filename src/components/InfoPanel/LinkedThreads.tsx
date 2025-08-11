@@ -1,4 +1,9 @@
-export default function LinkedThreads() {
+interface LinkedThreadsProps {
+  channelId: string;
+  workspaceId: string;
+}
+
+export default function LinkedThreads({ channelId, workspaceId }: LinkedThreadsProps) {
   const threads = [
     { id: "1", name: "Front-end", count: 4 },
     { id: "2", name: "UI-kit design standards", count: null },

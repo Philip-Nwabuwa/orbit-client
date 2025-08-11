@@ -131,7 +131,7 @@ export function TaskBoard({ filters }: { filters: TaskBoardFilters }) {
   }>({ open: false, status: "todo" });
 
   const header = (
-    <div className="p-4 border-b border-gray-200">
+    <div className="p-4 border-b border-gray-200 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold text-gray-900">Task</h3>
@@ -143,6 +143,14 @@ export function TaskBoard({ filters }: { filters: TaskBoardFilters }) {
             <button className="hover:text-gray-900">Table</button>
           </div>
         </div>
+        <button
+          className="rounded-md bg-indigo-600 text-white px-3 py-1.5 text-sm"
+          onClick={() => setShowCreate({ open: true, status: "todo" })}
+        >
+          + Add Task
+        </button>
+      </div>
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="relative">
             <input
@@ -187,6 +195,8 @@ export function TaskBoard({ filters }: { filters: TaskBoardFilters }) {
               </button>
             ))}
           </div>
+        </div>
+        <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger className="rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-700">
               Sort by
@@ -236,12 +246,6 @@ export function TaskBoard({ filters }: { filters: TaskBoardFilters }) {
           </DropdownMenu>
           <button className="rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-700">
             Import/Export
-          </button>
-          <button
-            className="rounded-md bg-indigo-600 text-white px-3 py-1.5 text-sm"
-            onClick={() => setShowCreate({ open: true, status: "todo" })}
-          >
-            + Add Task
           </button>
         </div>
       </div>
@@ -381,10 +385,13 @@ function TaskBoardInner(props: {
   const { filters, onOpenTask } = props;
   const tasks = useTaskStore((s) => s.tasks);
   const moveTask = useTaskStore((s) => s.moveTask);
-  const addTask = useTaskStore((s) => s.addTask);
   useNavigationStore();
   const [search, setSearch] = useState("");
   const [statusView, setStatusView] = useState<"all" | TaskStatus>("all");
+  const [showCreate, setShowCreate] = useState<{
+    open: boolean;
+    status: TaskStatus;
+  }>({ open: false, status: "todo" });
 
   const filtered = useMemo(() => {
     const combinedSearch = (filters.search ?? search).trim();
@@ -441,7 +448,7 @@ function TaskBoardInner(props: {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h3 className="text-lg font-semibold text-gray-900">Task</h3>
@@ -453,6 +460,14 @@ function TaskBoardInner(props: {
               <button className="hover:text-gray-900">Table</button>
             </div>
           </div>
+          <button 
+            className="rounded-md bg-indigo-600 text-white px-3 py-1.5 text-sm"
+            onClick={() => setShowCreate({ open: true, status: "todo" })}
+          >
+            + Add Task
+          </button>
+        </div>
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="relative">
               <input
@@ -496,6 +511,8 @@ function TaskBoardInner(props: {
                 </button>
               ))}
             </div>
+          </div>
+          <div className="flex items-center gap-2">
             <button className="rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-700">
               Sort by
             </button>
@@ -504,9 +521,6 @@ function TaskBoardInner(props: {
             </button>
             <button className="rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-700">
               Import/Export
-            </button>
-            <button className="rounded-md bg-indigo-600 text-white px-3 py-1.5 text-sm">
-              + Add Task
             </button>
           </div>
         </div>
@@ -557,14 +571,7 @@ function TaskBoardInner(props: {
                     className="p-1 hover:bg-gray-100 rounded"
                     aria-label={`Add ${meta.title} task`}
                     onClick={() =>
-                      addTask({
-                        title: "New Task",
-                        status: key as TaskStatus,
-                        priority: "medium",
-                        tags: [],
-                        workspaceId: filters.workspaceId,
-                        channelId: filters.channelId ?? null,
-                      })
+                      setShowCreate({ open: true, status: key as TaskStatus })
                     }
                   >
                     <svg
@@ -607,6 +614,15 @@ function TaskBoardInner(props: {
           ))}
         </div>
       </div>
+      
+      {/* Create task sheet */}
+      <TaskCreateSheet
+        open={showCreate.open}
+        onOpenChange={(o) => setShowCreate((s) => ({ ...s, open: o }))}
+        workspaceId={filters.workspaceId}
+        channelId={filters.channelId ?? null}
+        initialStatus={showCreate.status}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import React from "react";
 import type { TaskItem, TaskPriority } from "@/store/taskStore";
 import { format } from "date-fns";
+import Image from "next/image";
 
 function getPriorityBorder(priority: TaskPriority) {
   switch (priority) {
@@ -89,10 +90,12 @@ export function TaskCard({ task }: { task: TaskItem }) {
       <div className="flex items-center justify-between mt-3">
         <div className="flex -space-x-2 overflow-hidden">
           {task.assigneeAvatarUrl && (
-            <img
+            <Image
               src={task.assigneeAvatarUrl}
               alt={task.assigneeName || "Assignee"}
-              className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+              width={24}
+              height={24}
+              className="inline-block h-6 w-6 rounded-full ring-2 ring-white object-cover"
             />
           )}
         </div>

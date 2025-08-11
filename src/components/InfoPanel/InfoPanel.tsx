@@ -2,10 +2,16 @@
 
 import { useMemo, useState } from "react";
 import TaskBoard from "@/components/Tasks/TaskBoard";
-import { useNavigationStore } from "@/store/navigationStore";
 import { useTaskStore } from "@/store/taskStore";
+import { useChannelStore } from "@/store/channelStore";
+import Image from "next/image";
 
-export default function InfoPanel() {
+interface InfoPanelProps {
+  channelId: string;
+  workspaceId: string;
+}
+
+export default function InfoPanel({ channelId, workspaceId }: InfoPanelProps) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const tags = [
@@ -24,23 +30,26 @@ export default function InfoPanel() {
     { name: "Best Practices", color: "bg-violet-100 text-violet-700" },
   ];
 
-  const { workspaceId, activeType, activeId } = useNavigationStore();
-  const currentChannelId = activeType === "channel" ? activeId : null;
+  const { channels } = useChannelStore();
   const tasks = useTaskStore((s) => s.tasks);
+
+  // Get current channel info
+  const currentChannel = channels.find((ch) => ch.id === channelId);
+
   const channelTaskCount = useMemo(() => {
     return tasks.filter((t) => {
       if (t.workspaceId !== workspaceId) return false;
-      return (t.channelId ?? null) === (currentChannelId ?? null);
+      return (t.channelId ?? null) === channelId;
     }).length;
-  }, [tasks, workspaceId, currentChannelId]);
+  }, [tasks, workspaceId, channelId]);
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
   const taskBoardFilters = useMemo(
-    () => ({ workspaceId, channelId: currentChannelId }),
-    [workspaceId, currentChannelId]
+    () => ({ workspaceId, channelId }),
+    [workspaceId, channelId]
   );
 
   const infoItems = [
@@ -63,7 +72,8 @@ export default function InfoPanel() {
       label: "Creator",
       value: "Andrew M.",
       hasAvatar: true,
-      avatarUrl: "/avatar4.jpg",
+      avatarUrl:
+        "https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=1160&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     },
     {
       icon: (
@@ -172,9 +182,11 @@ export default function InfoPanel() {
               </div>
               <div className="flex items-center space-x-2">
                 {item.hasAvatar && (
-                  <img
+                  <Image
                     src={item.avatarUrl}
                     alt={item.value}
+                    width={24}
+                    height={24}
                     className="w-6 h-6 rounded-full"
                   />
                 )}

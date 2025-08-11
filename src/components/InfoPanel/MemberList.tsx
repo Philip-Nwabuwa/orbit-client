@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import { useMemberStore } from "@/store/memberStore";
 
 interface Member {
@@ -12,7 +13,15 @@ interface Member {
   isOffline?: boolean;
 }
 
-export default function MembersList() {
+interface MembersListProps {
+  channelId: string;
+  workspaceId: string;
+}
+
+export default function MembersList({
+  channelId,
+  workspaceId,
+}: MembersListProps) {
   const { members, initializeMembers } = useMemberStore();
 
   useEffect(() => {
@@ -99,9 +108,11 @@ export default function MembersList() {
           <div key={member.id} className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <img
+                <Image
                   src={member.avatarUrl}
                   alt={member.name}
+                  width={40}
+                  height={40}
                   className="w-10 h-10 rounded-full"
                 />
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
@@ -132,9 +143,11 @@ export default function MembersList() {
               className="flex items-center space-x-3 opacity-60"
             >
               <div className="relative">
-                <img
+                <Image
                   src={member.avatarUrl}
                   alt={member.name}
+                  width={40}
+                  height={40}
                   className="w-10 h-10 rounded-full opacity-60"
                 />
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-gray-400 border-2 border-white rounded-full"></span>

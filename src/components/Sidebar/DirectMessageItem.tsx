@@ -1,6 +1,6 @@
 "use client";
 
-import { Circle } from "lucide-react";
+import Image from "next/image";
 import { useDirectMessagesStore } from "@/store/directMessagesStore";
 import { useNavigationStore } from "@/store/navigationStore";
 import { formatDate } from "@/lib/formatDate";
@@ -86,12 +86,29 @@ export default function DirectMessageItem({
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <div className="relative">
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
-            <span className="text-lg">{directMessage.avatar || "👤"}</span>
-          </div>
-          {directMessage.isOnline && (
-            <Circle className="absolute -bottom-0.5 -right-0.5 size-3 text-green-500 fill-green-500" />
+          {directMessage.avatar ? (
+            <div className="w-8 h-8 rounded-full overflow-hidden">
+              <Image
+                src={directMessage.avatar}
+                alt={directMessage.userName}
+                width={32}
+                height={32}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+              <span className="text-sm text-gray-600">
+                {directMessage.userName.charAt(0).toUpperCase()}
+              </span>
+            </div>
           )}
+          {/* Online indicator */}
+          <div
+            className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
+              directMessage.isOnline ? "bg-green-500" : "bg-gray-400"
+            }`}
+          />
         </div>
 
         <div className="flex flex-col flex-1 min-w-0">

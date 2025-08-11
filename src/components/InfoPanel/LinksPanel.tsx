@@ -1,6 +1,7 @@
 import avatarUrl from "@/assets/images/hero.jpeg";
 import { ExternalLinkIcon, GlobeIcon, MoreHorizontalIcon } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface LinkItem {
   id: string;
@@ -72,7 +73,15 @@ const links: LinkItem[] = [
   },
 ];
 
-export default function LinksPanel() {
+interface LinksPanelProps {
+  channelId: string;
+  workspaceId: string;
+}
+
+export default function LinksPanel({
+  channelId,
+  workspaceId,
+}: LinksPanelProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -89,9 +98,11 @@ export default function LinksPanel() {
             >
               <div className="flex space-x-3">
                 {link.thumbnail ? (
-                  <img
+                  <Image
                     src={link.thumbnail}
                     alt=""
+                    width={60}
+                    height={40}
                     className="w-15 h-10 rounded bg-gray-100 flex-shrink-0 object-cover"
                   />
                 ) : (
@@ -130,9 +141,11 @@ export default function LinksPanel() {
                   </div>
 
                   <div className="flex items-center space-x-2 mt-3 pt-3 border-t border-gray-100">
-                    <img
+                    <Image
                       src={link.sharedBy.avatar}
                       alt={link.sharedBy.name}
+                      width={16}
+                      height={16}
                       className="w-4 h-4 rounded-full"
                     />
                     <span className="text-xs text-gray-500">

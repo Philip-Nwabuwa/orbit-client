@@ -2,6 +2,7 @@
 
 import avatarUrl from "@/assets/images/hero.jpeg";
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 
 interface Member {
   id: string;
@@ -10,7 +11,17 @@ interface Member {
   emoji?: string;
 }
 
-export default function MessageComposer() {
+interface MessageComposerProps {
+  channelId?: string;
+  dmUserId?: string;
+  workspaceId: string;
+}
+
+export default function MessageComposer({
+  channelId,
+  dmUserId,
+  workspaceId,
+}: MessageComposerProps) {
   const [message, setMessage] = useState("");
   const [showMentions, setShowMentions] = useState(false);
   const [mentionSearch, setMentionSearch] = useState("");
@@ -84,7 +95,7 @@ export default function MessageComposer() {
                 className="w-full px-3 py-2 flex items-center space-x-2 hover:bg-gray-50 text-left"
               >
                 {member.avatarUrl ? (
-                  <img
+                  <Image
                     src={member.avatarUrl}
                     alt={member.name}
                     className="w-6 h-6 rounded-full"
