@@ -11,12 +11,16 @@ interface MessageListProps {
   workspaceId: string;
 }
 
-export default function MessageList({ channelId, dmUserId, workspaceId }: MessageListProps) {
-  const { 
-    getMessagesForChannel, 
-    getMessagesForDM, 
+export default function MessageList({
+  channelId,
+  dmUserId,
+  workspaceId,
+}: MessageListProps) {
+  const {
+    getMessagesForChannel,
+    getMessagesForDM,
     initializeChannelMessages,
-    initializeDMMessages
+    initializeDMMessages,
   } = useMessageStore();
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -29,9 +33,9 @@ export default function MessageList({ channelId, dmUserId, workspaceId }: Messag
   );
 
   // Get messages based on context
-  const messages = channelId 
+  const messages = channelId
     ? getMessagesForChannel(channelId, workspaceId)
-    : dmUserId 
+    : dmUserId
     ? getMessagesForDM(dmUserId, workspaceId)
     : [];
 
@@ -42,7 +46,14 @@ export default function MessageList({ channelId, dmUserId, workspaceId }: Messag
     } else if (dmUserId && messages.length === 0) {
       initializeDMMessages(dmUserId, workspaceId);
     }
-  }, [channelId, dmUserId, workspaceId, messages.length, initializeChannelMessages, initializeDMMessages]);
+  }, [
+    channelId,
+    dmUserId,
+    workspaceId,
+    messages.length,
+    initializeChannelMessages,
+    initializeDMMessages,
+  ]);
 
   // Track if user is manually scrolling
   useEffect(() => {
@@ -117,7 +128,10 @@ export default function MessageList({ channelId, dmUserId, workspaceId }: Messag
             showQuickView={message.showQuickView}
             imageUrl={message.imageUrl}
             imageAlt={message.imageAlt}
+            images={message.images}
             onImageClick={handleImageClick}
+            audioUrl={message.audioUrl}
+            isVoiceMessage={message.isVoiceMessage}
           />
         ))}
         <div ref={bottomRef} className="h-1" />

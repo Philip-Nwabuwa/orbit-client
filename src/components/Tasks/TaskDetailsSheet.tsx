@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import {
   Sheet,
   SheetContent,
@@ -55,6 +56,8 @@ export default function TaskDetailsSheet({
                   <Image
                     src={task.assigneeAvatarUrl}
                     alt={task.assigneeName || "Assignee"}
+                    width={24}
+                    height={24}
                     className="h-6 w-6 rounded-full"
                   />
                 )}

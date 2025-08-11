@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   X,
@@ -20,6 +20,10 @@ interface ImageViewerProps {
 export default function ImageViewer({ url, alt, onClose }: ImageViewerProps) {
   const [scale, setScale] = useState<number>(1);
   const [rotation, setRotation] = useState<number>(0); // degrees
+  const [naturalSize, setNaturalSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const isPanningRef = useRef(false);
@@ -96,6 +100,33 @@ export default function ImageViewer({ url, alt, onClose }: ImageViewerProps) {
     else handleZoomOut();
   };
 
+  // Preload image to get intrinsic dimensions for Next <Image />
+  useEffect(() => {
+    let isMounted = true;
+    setNaturalSize(null);
+    try {
+      const img = new window.Image();
+      img.onload = () => {
+        if (!isMounted) return;
+        const width = img.naturalWidth || 1;
+        const height = img.naturalHeight || 1;
+        setNaturalSize({ width, height });
+      };
+      img.onerror = () => {
+        if (!isMounted) return;
+        // Fallback to a sensible default to satisfy Next Image requirements
+        setNaturalSize({ width: 800, height: 600 });
+      };
+      img.src = url;
+    } catch {
+      // In environments without window (SSR safety), provide a default
+      setNaturalSize({ width: 800, height: 600 });
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [url]);
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center"
@@ -170,19 +201,24 @@ export default function ImageViewer({ url, alt, onClose }: ImageViewerProps) {
         onMouseLeave={onMouseUp}
         onWheel={onWheel}
       >
-        <Image
-          src={url}
-          alt={alt || "image"}
-          className="rounded-lg shadow-2xl select-none"
-          style={{
-            transform: `scale(${scale}) rotate(${rotation}deg)`,
-            transformOrigin: "center center",
-            maxWidth: "90vw",
-            maxHeight: "85vh",
-            objectFit: "contain",
-          }}
-          draggable={false}
-        />
+        {naturalSize && (
+          <Image
+            src={url}
+            alt={alt || "image"}
+            width={naturalSize.width}
+            height={naturalSize.height}
+            className="rounded-lg shadow-2xl select-none"
+            style={{
+              transform: `scale(${scale}) rotate(${rotation}deg)`,
+              transformOrigin: "center center",
+              maxWidth: "90vw",
+              maxHeight: "85vh",
+              objectFit: "contain",
+            }}
+            draggable={false}
+            unoptimized={url.startsWith("blob:") || url.startsWith("data:")}
+          />
+        )}
       </div>
     </div>
   );

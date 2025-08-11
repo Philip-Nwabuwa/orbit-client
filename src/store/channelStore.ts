@@ -78,7 +78,7 @@ export const useChannelStore = create<ChannelState>((set, get) => ({
           description: "General discussions and announcements",
           isActive: true,
           isFavorite: true,
-          favoritedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+          favoritedAt: new Date("2024-01-15T10:00:00Z"), // Fixed date for hydration
         },
         {
           id: "2",
@@ -98,7 +98,7 @@ export const useChannelStore = create<ChannelState>((set, get) => ({
           icon: "#",
           description: "Design discussions and creative collaboration",
           isFavorite: true,
-          favoritedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+          favoritedAt: new Date("2024-01-14T12:00:00Z"), // Fixed date for hydration
         },
         // Parent channel: Website
         {

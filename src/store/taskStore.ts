@@ -2,6 +2,8 @@ import { create } from "zustand";
 
 export type TaskStatus = "todo" | "inProgress" | "reviewing" | "done";
 export type TaskPriority = "low" | "medium" | "high";
+export type TaskType = "standard" | "weekly" | "daily";
+export type WeeklyTaskStatus = "new" | "ongoing" | "completed";
 
 export interface TaskItem {
   id: string;
@@ -9,6 +11,7 @@ export interface TaskItem {
   description?: string;
   status: TaskStatus;
   priority: TaskPriority;
+  type?: TaskType;
   assigneeName?: string;
   assigneeAvatarUrl?: string;
   tags: string[];
@@ -22,12 +25,56 @@ export interface TaskItem {
   subtasksTotal?: number;
 }
 
+export interface WeeklyTaskItem {
+  id: string;
+  title: string;
+  description?: string;
+  status: WeeklyTaskStatus;
+  priority: TaskPriority;
+  assigneeName?: string;
+  assigneeAvatarUrl?: string;
+  tags: string[];
+  workspaceId: string;
+  channelId?: string | null;
+  createdAt: Date;
+  weekStartDate: Date;
+  weekEndDate: Date;
+}
+
+export interface DailyTaskItem {
+  id: string;
+  title: string;
+  description?: string;
+  completed: boolean;
+  priority: TaskPriority;
+  assigneeName?: string;
+  assigneeAvatarUrl?: string;
+  tags: string[];
+  workspaceId: string;
+  channelId?: string | null;
+  createdAt: Date;
+  scheduledDate: Date;
+  estimatedMinutes?: number;
+}
+
 interface TaskState {
   tasks: TaskItem[];
+  weeklyTasks: WeeklyTaskItem[];
+  dailyTasks: DailyTaskItem[];
   addTask: (task: Omit<TaskItem, "id" | "createdAt"> & { id?: string }) => void;
   updateTask: (taskId: string, updates: Partial<TaskItem>) => void;
   moveTask: (taskId: string, status: TaskStatus) => void;
   removeTask: (taskId: string) => void;
+  addWeeklyTask: (task: Omit<WeeklyTaskItem, "id" | "createdAt"> & { id?: string }) => void;
+  updateWeeklyTask: (taskId: string, updates: Partial<WeeklyTaskItem>) => void;
+  moveWeeklyTask: (taskId: string, status: WeeklyTaskStatus) => void;
+  removeWeeklyTask: (taskId: string) => void;
+  addDailyTask: (task: Omit<DailyTaskItem, "id" | "createdAt"> & { id?: string }) => void;
+  updateDailyTask: (taskId: string, updates: Partial<DailyTaskItem>) => void;
+  toggleDailyTask: (taskId: string) => void;
+  removeDailyTask: (taskId: string) => void;
+  getDailyTasksForDate: (date: Date) => DailyTaskItem[];
+  getWeeklyTasksForWeek: (startDate: Date) => WeeklyTaskItem[];
 }
 
 const DEFAULT_WORKSPACE_ID = "yrgGdg234j";
@@ -197,8 +244,10 @@ const initialTasks: TaskItem[] = [
   },
 ];
 
-export const useTaskStore = create<TaskState>((set) => ({
+export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: initialTasks,
+  weeklyTasks: [],
+  dailyTasks: [],
 
   addTask: (taskInput) =>
     set((state) => {
@@ -209,6 +258,7 @@ export const useTaskStore = create<TaskState>((set) => ({
         title: taskInput.title,
         status: taskInput.status,
         priority: taskInput.priority,
+        type: taskInput.type ?? "standard",
         assigneeName: taskInput.assigneeName,
         assigneeAvatarUrl: taskInput.assigneeAvatarUrl,
         tags: taskInput.tags ?? [],
@@ -233,4 +283,101 @@ export const useTaskStore = create<TaskState>((set) => ({
 
   removeTask: (taskId) =>
     set((state) => ({ tasks: state.tasks.filter((t) => t.id !== taskId) })),
+
+  addWeeklyTask: (taskInput) =>
+    set((state) => {
+      const newTask: WeeklyTaskItem = {
+        id: taskInput.id ?? `wt-${Date.now()}`,
+        createdAt: new Date(),
+        title: taskInput.title,
+        description: taskInput.description,
+        status: taskInput.status,
+        priority: taskInput.priority,
+        assigneeName: taskInput.assigneeName,
+        assigneeAvatarUrl: taskInput.assigneeAvatarUrl,
+        tags: taskInput.tags ?? [],
+        workspaceId: taskInput.workspaceId,
+        channelId: taskInput.channelId ?? null,
+        weekStartDate: taskInput.weekStartDate,
+        weekEndDate: taskInput.weekEndDate,
+      };
+      return { weeklyTasks: [newTask, ...state.weeklyTasks] };
+    }),
+
+  updateWeeklyTask: (taskId, updates) =>
+    set((state) => ({
+      weeklyTasks: state.weeklyTasks.map((t) =>
+        t.id === taskId ? { ...t, ...updates } : t
+      ),
+    })),
+
+  moveWeeklyTask: (taskId, status) =>
+    set((state) => ({
+      weeklyTasks: state.weeklyTasks.map((t) => 
+        t.id === taskId ? { ...t, status } : t
+      ),
+    })),
+
+  removeWeeklyTask: (taskId) =>
+    set((state) => ({ 
+      weeklyTasks: state.weeklyTasks.filter((t) => t.id !== taskId) 
+    })),
+
+  addDailyTask: (taskInput) =>
+    set((state) => {
+      const newTask: DailyTaskItem = {
+        id: taskInput.id ?? `dt-${Date.now()}`,
+        createdAt: new Date(),
+        title: taskInput.title,
+        description: taskInput.description,
+        completed: taskInput.completed ?? false,
+        priority: taskInput.priority,
+        assigneeName: taskInput.assigneeName,
+        assigneeAvatarUrl: taskInput.assigneeAvatarUrl,
+        tags: taskInput.tags ?? [],
+        workspaceId: taskInput.workspaceId,
+        channelId: taskInput.channelId ?? null,
+        scheduledDate: taskInput.scheduledDate,
+        estimatedMinutes: taskInput.estimatedMinutes,
+      };
+      return { dailyTasks: [newTask, ...state.dailyTasks] };
+    }),
+
+  updateDailyTask: (taskId, updates) =>
+    set((state) => ({
+      dailyTasks: state.dailyTasks.map((t) =>
+        t.id === taskId ? { ...t, ...updates } : t
+      ),
+    })),
+
+  toggleDailyTask: (taskId) =>
+    set((state) => ({
+      dailyTasks: state.dailyTasks.map((t) =>
+        t.id === taskId ? { ...t, completed: !t.completed } : t
+      ),
+    })),
+
+  removeDailyTask: (taskId) =>
+    set((state) => ({ 
+      dailyTasks: state.dailyTasks.filter((t) => t.id !== taskId) 
+    })),
+
+  getDailyTasksForDate: (date: Date) => {
+    const state = get();
+    const targetDateStr = date.toDateString();
+    return state.dailyTasks.filter(
+      (task) => task.scheduledDate.toDateString() === targetDateStr
+    );
+  },
+
+  getWeeklyTasksForWeek: (startDate: Date) => {
+    const state = get();
+    const startTime = startDate.getTime();
+    const endTime = startTime + 7 * 24 * 60 * 60 * 1000;
+    
+    return state.weeklyTasks.filter((task) => {
+      const taskStart = task.weekStartDate.getTime();
+      return taskStart >= startTime && taskStart < endTime;
+    });
+  },
 }));

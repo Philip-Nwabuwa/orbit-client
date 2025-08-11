@@ -18,8 +18,11 @@ export interface MessageItemModel {
   attachmentTitle?: string;
   attachmentUrl?: string;
   showQuickView?: boolean;
-  imageUrl?: string;
-  imageAlt?: string;
+  imageUrl?: string; // Legacy single image support
+  imageAlt?: string; // Legacy single image support
+  images?: { url: string; alt?: string }[]; // New multiple images support
+  audioUrl?: string; // Voice message audio URL
+  isVoiceMessage?: boolean; // Flag to identify voice messages
   // Context fields for channel/DM scoping
   channelId?: string;
   dmUserId?: string;
@@ -31,10 +34,19 @@ interface MessageState {
   initializeMessages: () => void;
   addMessage: (message: MessageItemModel) => void;
   updateMessage: (id: string, updates: Partial<MessageItemModel>) => void;
-  getMessagesForChannel: (channelId: string, workspaceId: string) => MessageItemModel[];
-  getMessagesForDM: (dmUserId: string, workspaceId: string) => MessageItemModel[];
+  getMessagesForChannel: (
+    channelId: string,
+    workspaceId: string
+  ) => MessageItemModel[];
+  getMessagesForDM: (
+    dmUserId: string,
+    workspaceId: string
+  ) => MessageItemModel[];
   initializeChannelMessages: (channelId: string, workspaceId: string) => void;
   initializeDMMessages: (dmUserId: string, workspaceId: string) => void;
+  addReaction: (messageId: string, emoji: string) => void;
+  removeReaction: (messageId: string, emoji: string) => void;
+  toggleReaction: (messageId: string, emoji: string) => void;
 }
 
 export const useMessageStore = create<MessageState>((set, get) => ({
@@ -87,19 +99,72 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     const dmMessages = getDMSampleMessages(dmUserId, workspaceId);
     set((state) => ({ messages: [...state.messages, ...dmMessages] }));
   },
+
+  addReaction: (messageId: string, emoji: string) =>
+    set((state) => ({
+      messages: state.messages.map((msg) =>
+        msg.id === messageId
+          ? {
+              ...msg,
+              reactions: msg.reactions.find((r) => r.emoji === emoji)
+                ? msg.reactions.map((r) =>
+                    r.emoji === emoji ? { ...r, count: r.count + 1 } : r
+                  )
+                : [...msg.reactions, { emoji, count: 1 }],
+            }
+          : msg
+      ),
+    })),
+
+  removeReaction: (messageId: string, emoji: string) =>
+    set((state) => ({
+      messages: state.messages.map((msg) =>
+        msg.id === messageId
+          ? {
+              ...msg,
+              reactions: msg.reactions
+                .map((r) =>
+                  r.emoji === emoji ? { ...r, count: r.count - 1 } : r
+                )
+                .filter((r) => r.count > 0),
+            }
+          : msg
+      ),
+    })),
+
+  toggleReaction: (messageId: string, emoji: string) => {
+    const state = get();
+    const message = state.messages.find((msg) => msg.id === messageId);
+    if (!message) return;
+
+    const existingReaction = message.reactions.find((r) => r.emoji === emoji);
+    if (existingReaction) {
+      state.removeReaction(messageId, emoji);
+    } else {
+      state.addReaction(messageId, emoji);
+    }
+  },
 }));
 
 // Sample data generators
-function getChannelSampleMessages(channelId: string, workspaceId: string): MessageItemModel[] {
+function getChannelSampleMessages(
+  channelId: string,
+  workspaceId: string
+): MessageItemModel[] {
   const baseMessages = {
-    "1": [ // General channel
+    "1": [
+      // General channel
       {
         id: `${channelId}-1`,
         avatarUrl: avatarUrl.src,
         name: "Sarah Miller",
         time: "1h ago",
-        message: "Good morning everyone! Hope you're all having a great start to the week. 🌟",
-        reactions: [{ emoji: "👋", count: 5 }, { emoji: "☕", count: 3 }],
+        message:
+          "Good morning everyone! Hope you're all having a great start to the week. 🌟",
+        reactions: [
+          { emoji: "👋", count: 5 },
+          { emoji: "☕", count: 3 },
+        ],
         channelId,
         workspaceId,
       },
@@ -107,7 +172,7 @@ function getChannelSampleMessages(channelId: string, workspaceId: string): Messa
         id: `${channelId}-2`,
         avatarUrl: avatarUrl.src,
         name: "Mike Chen",
-        time: "45m ago", 
+        time: "45m ago",
         message: "Don't forget about our team standup at 10 AM today!",
         mentions: ["@team"],
         reactions: [{ emoji: "✅", count: 8 }],
@@ -115,13 +180,15 @@ function getChannelSampleMessages(channelId: string, workspaceId: string): Messa
         workspaceId,
       },
     ],
-    "2": [ // Development channel
+    "2": [
+      // Development channel
       {
         id: `${channelId}-1`,
         avatarUrl: avatarUrl.src,
         name: "Alex Rodriguez",
         time: "2h ago",
-        message: "I've pushed the latest changes to the feature branch. The new authentication flow is ready for review.",
+        message:
+          "I've pushed the latest changes to the feature branch. The new authentication flow is ready for review.",
         reactions: [{ emoji: "🚀", count: 4 }],
         channelId,
         workspaceId,
@@ -131,25 +198,31 @@ function getChannelSampleMessages(channelId: string, workspaceId: string): Messa
         avatarUrl: avatarUrl.src,
         name: "Emma Thompson",
         time: "1h ago",
-        message: "Great work @Alex! I'll review the PR this afternoon and test the edge cases.",
+        message:
+          "Great work @Alex! I'll review the PR this afternoon and test the edge cases.",
         mentions: ["@Alex"],
         reactions: [{ emoji: "👍", count: 2 }],
         channelId,
         workspaceId,
       },
     ],
-    "3": [ // Design channel
+    "3": [
+      // Design channel
       {
         id: `${channelId}-1`,
         avatarUrl: avatarUrl.src,
         name: "Luna Parker",
         time: "3h ago",
-        message: "Here's the updated mockup for the dashboard redesign. What do you think?",
+        message:
+          "Here's the updated mockup for the dashboard redesign. What do you think?",
         hasAttachment: true,
         attachmentTitle: "Dashboard_v3_mockup.fig",
         attachmentUrl: "figma.com/design/dashboard-v3",
         showQuickView: true,
-        reactions: [{ emoji: "🎨", count: 6 }, { emoji: "✨", count: 4 }],
+        reactions: [
+          { emoji: "🎨", count: 6 },
+          { emoji: "✨", count: 4 },
+        ],
         channelId,
         workspaceId,
       },
@@ -158,13 +231,15 @@ function getChannelSampleMessages(channelId: string, workspaceId: string): Messa
         avatarUrl: avatarUrl.src,
         name: "Jordan Kim",
         time: "2h ago",
-        message: "Love the new color palette! The contrast ratios look perfect for accessibility.",
+        message:
+          "Love the new color palette! The contrast ratios look perfect for accessibility.",
         reactions: [{ emoji: "💚", count: 3 }],
         channelId,
         workspaceId,
       },
     ],
-    "6": [ // UI-Kit Design channel (nested)
+    "6": [
+      // UI-Kit Design channel (nested)
       {
         id: `${channelId}-1`,
         avatarUrl: avatarUrl.src,
@@ -239,39 +314,44 @@ function getChannelSampleMessages(channelId: string, workspaceId: string): Messa
         avatarUrl: avatarUrl.src,
         name: "User",
         time: "just now",
-        message:
-          "Looks great! Let's share this with @Management for sign-off.",
+        message: "Looks great! Let's share this with @Management for sign-off.",
         mentions: ["@Management"],
         reactions: [],
         channelId,
         workspaceId,
       },
-    ]
+    ],
   };
 
-  return baseMessages[channelId as keyof typeof baseMessages] || [
-    {
-      id: `${channelId}-default`,
-      avatarUrl: avatarUrl.src,
-      name: "System",
-      time: "now",
-      message: `Welcome to this channel! This is the beginning of your conversation.`,
-      reactions: [],
-      channelId,
-      workspaceId,
-    },
-  ];
+  return (
+    baseMessages[channelId as keyof typeof baseMessages] || [
+      {
+        id: `${channelId}-default`,
+        avatarUrl: avatarUrl.src,
+        name: "System",
+        time: "now",
+        message: `Welcome to this channel! This is the beginning of your conversation.`,
+        reactions: [],
+        channelId,
+        workspaceId,
+      },
+    ]
+  );
 }
 
-function getDMSampleMessages(dmUserId: string, workspaceId: string): MessageItemModel[] {
+function getDMSampleMessages(
+  dmUserId: string,
+  workspaceId: string
+): MessageItemModel[] {
   const dmMessages = {
-    "user1": [
+    user1: [
       {
         id: `dm-${dmUserId}-1`,
         avatarUrl: avatarUrl.src,
         name: "Alice Johnson",
         time: "10m ago",
-        message: "Hey! How's the project going? I saw the latest updates and they look amazing!",
+        message:
+          "Hey! How's the project going? I saw the latest updates and they look amazing!",
         reactions: [],
         dmUserId,
         workspaceId,
@@ -281,19 +361,21 @@ function getDMSampleMessages(dmUserId: string, workspaceId: string): MessageItem
         avatarUrl: avatarUrl.src,
         name: "You",
         time: "5m ago",
-        message: "Thanks Alice! We're making great progress. Should have the first milestone ready by Friday.",
+        message:
+          "Thanks Alice! We're making great progress. Should have the first milestone ready by Friday.",
         reactions: [{ emoji: "👍", count: 1 }],
         dmUserId,
         workspaceId,
       },
     ],
-    "user2": [
+    user2: [
       {
         id: `dm-${dmUserId}-1`,
         avatarUrl: avatarUrl.src,
         name: "Bob Smith",
         time: "2h ago",
-        message: "Let's review the designs tomorrow. I have some feedback on the navigation flow.",
+        message:
+          "Let's review the designs tomorrow. I have some feedback on the navigation flow.",
         reactions: [],
         dmUserId,
         workspaceId,
@@ -309,13 +391,14 @@ function getDMSampleMessages(dmUserId: string, workspaceId: string): MessageItem
         workspaceId,
       },
     ],
-    "user3": [
+    user3: [
       {
         id: `dm-${dmUserId}-1`,
         avatarUrl: avatarUrl.src,
         name: "Carol Davis",
         time: "1d ago",
-        message: "Thanks for the code review! I've addressed all your comments.",
+        message:
+          "Thanks for the code review! I've addressed all your comments.",
         reactions: [{ emoji: "✅", count: 1 }],
         dmUserId,
         workspaceId,
@@ -323,16 +406,18 @@ function getDMSampleMessages(dmUserId: string, workspaceId: string): MessageItem
     ],
   };
 
-  return dmMessages[dmUserId as keyof typeof dmMessages] || [
-    {
-      id: `dm-${dmUserId}-default`,
-      avatarUrl: avatarUrl.src,
-      name: "System",
-      time: "now",
-      message: "This is the start of your conversation.",
-      reactions: [],
-      dmUserId,
-      workspaceId,
-    },
-  ];
+  return (
+    dmMessages[dmUserId as keyof typeof dmMessages] || [
+      {
+        id: `dm-${dmUserId}-default`,
+        avatarUrl: avatarUrl.src,
+        name: "System",
+        time: "now",
+        message: "This is the start of your conversation.",
+        reactions: [],
+        dmUserId,
+        workspaceId,
+      },
+    ]
+  );
 }
