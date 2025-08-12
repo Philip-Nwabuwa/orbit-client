@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Orbit - Team Collaboration",
+  title: "Collabix - Team Collaboration",
   description:
     "Modern team collaboration platform for seamless communication and project management",
 };
@@ -23,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
+        suppressHydrationWarning
         className={`${inter.variable} font-sans antialiased bg-background text-foreground overflow-hidden`}
       >
         {children}

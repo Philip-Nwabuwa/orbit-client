@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import VoiceRecorder from "@/components/common/VoiceRecorder";
+import { makeConversationKey, useDraftStore } from "@/store/draftStore";
 interface Member {
   id: string;
   name: string;
@@ -38,6 +39,7 @@ export default function MessageComposer({
   workspaceId,
 }: MessageComposerProps) {
   const { addMessage } = useMessageStore();
+  const { setDraft, getDraftText, clearDraft } = useDraftStore();
   const [message, setMessage] = useState("");
   const [showMentions, setShowMentions] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
@@ -49,6 +51,18 @@ export default function MessageComposer({
   >([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const draftKey = makeConversationKey(workspaceId, channelId, dmUserId);
+
+  // Load draft on mount / conversation change
+  useEffect(() => {
+    const draft = getDraftText(draftKey);
+    if (draft) setMessage(draft);
+  }, [draftKey, getDraftText]);
+
+  // Persist draft as user types
+  useEffect(() => {
+    setDraft(draftKey, message);
+  }, [draftKey, message, setDraft]);
 
   const members: Member[] = [
     { id: "1", name: "Diana Taylor", avatarUrl: avatarUrl.src },
@@ -184,7 +198,7 @@ export default function MessageComposer({
       audioUrl: audioUrl,
       isVoiceMessage: true,
     };
-    
+
     addMessage(newMessage);
     setShowVoiceRecorder(false);
   };
@@ -226,6 +240,7 @@ export default function MessageComposer({
 
     addMessage(newMessage);
     setMessage("");
+    clearDraft(draftKey);
     setSelectedImages([]);
     setShowMentions(false);
     setMentionSearch("");
@@ -248,6 +263,7 @@ export default function MessageComposer({
 
   const handleDiscard = () => {
     setMessage("");
+    clearDraft(draftKey);
     setSelectedImages((prev) => {
       // Clean up object URLs
       prev.forEach((img) => URL.revokeObjectURL(img.preview));
@@ -279,7 +295,6 @@ export default function MessageComposer({
         accept="image/*"
         multiple
       />
-
 
       {/* Mention Dropdown */}
       {showMentions && (
@@ -426,7 +441,10 @@ export default function MessageComposer({
               </button>
 
               {/* Emoji */}
-              <Popover onOpenChange={setIsEmojiPickerOpen} open={isEmojiPickerOpen}>
+              <Popover
+                onOpenChange={setIsEmojiPickerOpen}
+                open={isEmojiPickerOpen}
+              >
                 <PopoverTrigger asChild>
                   <button
                     className="p-2 hover:bg-gray-100 rounded-lg"
@@ -481,7 +499,10 @@ export default function MessageComposer({
               </button>
 
               {/* Voice Recording */}
-              <Popover onOpenChange={setShowVoiceRecorder} open={showVoiceRecorder}>
+              <Popover
+                onOpenChange={setShowVoiceRecorder}
+                open={showVoiceRecorder}
+              >
                 <PopoverTrigger asChild>
                   <button
                     className="p-2 hover:bg-gray-100 rounded-lg"
@@ -528,7 +549,6 @@ export default function MessageComposer({
           </div>
         </div>
       </div>
-
     </div>
   );
 }

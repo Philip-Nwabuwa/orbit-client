@@ -3,7 +3,7 @@ import AppDock from "@/components/AppDock/AppDock";
 import Sidebar from "@/components/Sidebar/Sidebar";
 
 export const metadata: Metadata = {
-  title: "Orbit - Team Collaboration",
+  title: "Collabix - Team Collaboration",
   description:
     "Modern team collaboration platform for seamless communication and project management",
 };

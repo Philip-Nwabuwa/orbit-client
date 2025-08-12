@@ -6,7 +6,10 @@ interface ChannelViewProps {
   workspaceId: string;
 }
 
-export default function ChannelView({ channelId, workspaceId }: ChannelViewProps) {
+export default function ChannelView({
+  channelId,
+  workspaceId,
+}: ChannelViewProps) {
   return (
     <div className="flex flex-col flex-1 bg-white min-h-0">
       {/* Messages Container */}

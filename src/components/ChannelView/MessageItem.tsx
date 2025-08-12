@@ -1,11 +1,13 @@
-// components/MessageItem.tsx
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Bookmark as BookmarkIcon } from "lucide-react";
+import { useSavedStore } from "@/store/savedStore";
 import AudioPlayer from "@/components/common/AudioPlayer";
 
 interface MessageItemProps {
+  id: string;
   avatarUrl: string;
   name: string;
   time: string;
@@ -22,9 +24,13 @@ interface MessageItemProps {
   onImageClick?: (url: string, alt?: string) => void;
   audioUrl?: string; // Voice message audio URL
   isVoiceMessage?: boolean; // Flag to identify voice messages
+  workspaceId: string;
+  channelId?: string;
+  dmUserId?: string;
 }
 
 export default function MessageItem({
+  id,
   avatarUrl,
   name,
   time,
@@ -41,8 +47,36 @@ export default function MessageItem({
   onImageClick,
   audioUrl,
   isVoiceMessage = false,
+  workspaceId,
+  channelId,
+  dmUserId,
 }: MessageItemProps) {
   const [showToolbar, setShowToolbar] = useState(false);
+  const { isSaved, toggleSaveMessage } = useSavedStore();
+  const saved = isSaved(id);
+
+  const escapedMentionsPattern = useMemo(() => {
+    if (!mentions || mentions.length === 0) return null;
+    const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(${mentions.map(escapeRegex).join("|")})`, "g");
+  }, [mentions]);
+
+  const renderedMessageParts = useMemo(() => {
+    if (!escapedMentionsPattern) return [message];
+    const parts = message.split(escapedMentionsPattern);
+    return parts.map((part, index) =>
+      mentions.includes(part) ? (
+        <span
+          key={`m-${index}`}
+          className="text-blue-600 cursor-pointer hover:underline"
+        >
+          {part}
+        </span>
+      ) : (
+        <span key={`t-${index}`}>{part}</span>
+      )
+    );
+  }, [message, mentions, escapedMentionsPattern]);
 
   return (
     <div
@@ -159,24 +193,28 @@ export default function MessageItem({
             </svg>
           </button>
 
-          {/* Bookmark */}
+          {/* Save / Unsave */}
           <button
-            className="p-1.5 hover:bg-gray-700 rounded transition-colors"
-            title="Bookmark"
+            className={`p-1.5 rounded transition-colors ${
+              saved ? "bg-yellow-600/20" : "hover:bg-gray-700"
+            }`}
+            title={saved ? "Unsave" : "Save"}
+            onClick={() =>
+              toggleSaveMessage({
+                messageId: id,
+                workspaceId,
+                channelId,
+                dmUserId,
+                preview: message,
+                authorName: name,
+              })
+            }
           >
-            <svg
-              className="w-4 h-4 text-gray-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-              />
-            </svg>
+            <BookmarkIcon
+              className={`w-4 h-4 ${
+                saved ? "text-yellow-400" : "text-gray-300"
+              }`}
+            />
           </button>
 
           {/* More Options */}
@@ -215,20 +253,8 @@ export default function MessageItem({
         </div>
         {/* Message text (only show if not a voice message or if there's additional text) */}
         {(!isVoiceMessage || message.trim()) && (
-          <div className="text-gray-700 mb-2">
-            {message.split(" ").map((word, index) => {
-              if (mentions.includes(word)) {
-                return (
-                  <span
-                    key={index}
-                    className="text-blue-600 cursor-pointer hover:underline"
-                  >
-                    {word}{" "}
-                  </span>
-                );
-              }
-              return <span key={index}>{word} </span>;
-            })}
+          <div className="text-gray-700 mb-2 whitespace-pre-wrap">
+            {renderedMessageParts}
           </div>
         )}
 

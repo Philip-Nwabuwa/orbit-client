@@ -2,6 +2,7 @@
 
 import MessageItem from "./MessageItem";
 import ImageViewer from "./ImageViewer";
+import ConversationIntro from "./ConversationIntro";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useMessageStore } from "@/store/messageStore";
 
@@ -113,9 +114,16 @@ export default function MessageList({
         className="flex flex-col overflow-y-auto flex-1"
         style={{ scrollBehavior: "smooth" }}
       >
+        {/* Intro block at the start of every conversation */}
+        <ConversationIntro
+          channelId={channelId}
+          dmUserId={dmUserId}
+          workspaceId={workspaceId}
+        />
         {messages.map((message) => (
           <MessageItem
             key={message.id}
+            id={message.id}
             avatarUrl={message.avatarUrl}
             name={message.name}
             time={message.time}
@@ -132,6 +140,9 @@ export default function MessageList({
             onImageClick={handleImageClick}
             audioUrl={message.audioUrl}
             isVoiceMessage={message.isVoiceMessage}
+            workspaceId={workspaceId}
+            channelId={message.channelId}
+            dmUserId={message.dmUserId}
           />
         ))}
         <div ref={bottomRef} className="h-1" />

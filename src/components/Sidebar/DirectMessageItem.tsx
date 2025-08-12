@@ -9,6 +9,8 @@ import ItemActions, {
   createDirectMessageActions,
 } from "@/components/ui/item-actions";
 import { useRouter } from "next/navigation";
+import { makeConversationKey, useDraftStore } from "@/store/draftStore";
+import { PencilLine } from "lucide-react";
 
 interface DirectMessage {
   id: string;
@@ -32,9 +34,16 @@ export default function DirectMessageItem({
   const { toggleFavorite } = useDirectMessagesStore();
   const { activeType, activeId, workspaceId, setActiveDirectMessage } =
     useNavigationStore();
+  const { hasDraft } = useDraftStore();
   const router = useRouter();
   const isActive =
     activeType === "directMessage" && activeId === directMessage.userId;
+  const draftKey = makeConversationKey(
+    workspaceId,
+    undefined,
+    directMessage.userId
+  );
+  const showDraft = hasDraft(draftKey);
 
   const handleConversationClick = () => {
     setActiveDirectMessage(directMessage.userId);
@@ -136,6 +145,11 @@ export default function DirectMessageItem({
 
       <div className="flex items-center gap-1">
         <BadgeCount count={directMessage.unreadCount} />
+        {showDraft && (
+          <span className="px-1.5 py-0.5 text-[10px] rounded text-yellow-800">
+            <PencilLine className="size-3" />
+          </span>
+        )}
         <ItemActions actions={actions} className="ml-1" />
       </div>
     </div>

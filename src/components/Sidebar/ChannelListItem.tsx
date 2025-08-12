@@ -1,4 +1,4 @@
-import { Hash, Lock, Users } from "lucide-react";
+import { Hash, Lock, PencilLine, Users } from "lucide-react";
 import { useChannelStore } from "@/store/channelStore";
 import { useNavigationStore } from "@/store/navigationStore";
 import { BadgeCount } from "@/components/ui/count";
@@ -7,6 +7,7 @@ import ItemActions, {
 } from "@/components/ui/item-actions";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { makeConversationKey, useDraftStore } from "@/store/draftStore";
 
 interface Channel {
   id: string;
@@ -34,8 +35,11 @@ export default function ChannelListItem({
   const { toggleFavorite } = useChannelStore();
   const { activeType, activeId, workspaceId, setActiveChannel } =
     useNavigationStore();
+  const { hasDraft } = useDraftStore();
   const router = useRouter();
   const isActive = activeType === "channel" && activeId === channel.id;
+  const draftKey = makeConversationKey(workspaceId, channel.id);
+  const showDraft = hasDraft(draftKey);
 
   const getChannelIcon = () => {
     if (channel.icon) return channel.icon;
@@ -105,6 +109,11 @@ export default function ChannelListItem({
       </div>
       <div className="flex items-center gap-1">
         <BadgeCount count={channel.unreadCount} />
+        {showDraft && (
+          <span className="px-1.5 py-0.5 text-[10px] rounded text-yellow-800">
+            <PencilLine className="size-3" />
+          </span>
+        )}
         <ItemActions actions={actions} className="ml-1" />
       </div>
     </div>
