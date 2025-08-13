@@ -2,8 +2,26 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { Bookmark as BookmarkIcon } from "lucide-react";
+import {
+  Bookmark as BookmarkIcon,
+  Forward as ForwardIcon,
+  SmilePlus,
+} from "lucide-react";
 import { useSavedStore } from "@/store/savedStore";
+import ForwardDialog from "./ForwardDialog";
+import ThreadPane from "./ThreadPane";
+import {
+  EmojiPicker,
+  EmojiPickerSearch,
+  EmojiPickerContent,
+  EmojiPickerFooter,
+} from "@/components/common/emoji-picker";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useMessageStore } from "@/store/messageStore";
 import AudioPlayer from "@/components/common/AudioPlayer";
 
 interface MessageItemProps {
@@ -52,8 +70,18 @@ export default function MessageItem({
   dmUserId,
 }: MessageItemProps) {
   const [showToolbar, setShowToolbar] = useState(false);
+  const [forwardOpen, setForwardOpen] = useState(false);
+  const [threadOpen, setThreadOpen] = useState(false);
   const { isSaved, toggleSaveMessage } = useSavedStore();
   const saved = isSaved(id);
+  const toggleReaction = useMessageStore((s) => s.toggleReaction);
+  const liveReactions = useMessageStore(
+    (s) => s.messages.find((m) => m.id === id)?.reactions
+  );
+  const reactionsToRender = liveReactions ?? reactions;
+  const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
+  const [inlinePickerOpen, setInlinePickerOpen] = useState(false);
+  const quickReactions = ["👍", "❤️", "😂"] as const;
 
   const escapedMentionsPattern = useMemo(() => {
     if (!mentions || mentions.length === 0) return null;
@@ -87,24 +115,6 @@ export default function MessageItem({
       {/* Hover Toolbar */}
       {showToolbar && (
         <div className="absolute -top-9 right-4 bg-gray-800 rounded-lg shadow-lg flex items-center px-1 py-1 space-x-0.5 z-20">
-          {/* Check/Complete */}
-          <button
-            className="p-1.5 hover:bg-gray-700 rounded transition-colors"
-            title="Mark as complete"
-          >
-            <svg
-              className="w-4 h-4 text-green-400"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
-
           {/* Quote/Reply */}
           <button
             className="p-1.5 hover:bg-gray-700 rounded transition-colors"
@@ -125,13 +135,48 @@ export default function MessageItem({
             </svg>
           </button>
 
-          {/* Hands/Reaction */}
-          <button
-            className="p-1.5 hover:bg-gray-700 rounded transition-colors"
-            title="Add reaction"
-          >
-            <span className="text-base">🙌</span>
-          </button>
+          {/* Quick reactions + picker */}
+          <div className="flex items-center gap-0.5">
+            {quickReactions.map((emoji) => (
+              <button
+                key={emoji}
+                className="p-1.5 hover:bg-gray-700 rounded transition-colors"
+                title={`React ${emoji}`}
+                onClick={() => toggleReaction(id, emoji)}
+              >
+                <span className="text-base">{emoji}</span>
+              </button>
+            ))}
+            <Popover
+              onOpenChange={setReactionPickerOpen}
+              open={reactionPickerOpen}
+            >
+              <PopoverTrigger asChild>
+                <button
+                  className="p-1.5 hover:bg-gray-700 rounded transition-colors"
+                  title="More reactions"
+                >
+                  <SmilePlus className="w-4 h-4 text-gray-300" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-fit p-0">
+                <EmojiPicker
+                  className="h-[312px]"
+                  onEmojiSelect={(emojiData: {
+                    emoji: string;
+                    label: string;
+                  }) => {
+                    toggleReaction(id, emojiData.emoji);
+                    setReactionPickerOpen(false);
+                  }}
+                >
+                  <EmojiPickerSearch />
+                  <EmojiPickerContent />
+                  <EmojiPickerFooter />
+                </EmojiPicker>
+              </PopoverContent>
+            </Popover>
+          </div>
 
           {/* Refresh/Sync */}
           <button
@@ -157,6 +202,7 @@ export default function MessageItem({
           <button
             className="p-1.5 hover:bg-gray-700 rounded transition-colors"
             title="Comment"
+            onClick={() => setThreadOpen(true)}
           >
             <svg
               className="w-4 h-4 text-gray-300"
@@ -177,20 +223,9 @@ export default function MessageItem({
           <button
             className="p-1.5 hover:bg-gray-700 rounded transition-colors"
             title="Forward"
+            onClick={() => setForwardOpen(true)}
           >
-            <svg
-              className="w-4 h-4 text-gray-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M14 5l7 7m0 0l-7 7m7-7H3"
-              />
-            </svg>
+            <ForwardIcon className="w-4 h-4 text-gray-300" />
           </button>
 
           {/* Save / Unsave */}
@@ -348,12 +383,14 @@ export default function MessageItem({
           </div>
         )}
 
-        {reactions.length > 0 && (
+        {(reactionsToRender?.length ?? 0) > 0 && (
           <div className="flex items-center space-x-2 mt-2">
-            {reactions.map((reaction, index) => (
+            {reactionsToRender!.map((reaction, index) => (
               <button
                 key={index}
                 className="flex items-center space-x-1 px-2 py-1 bg-gray-100 rounded-full hover:bg-gray-200"
+                onClick={() => toggleReaction(id, reaction.emoji)}
+                title="Toggle reaction"
               >
                 <span>{reaction.emoji}</span>
                 {reaction.count > 0 && (
@@ -363,24 +400,70 @@ export default function MessageItem({
                 )}
               </button>
             ))}
-            <button className="p-1 hover:bg-gray-100 rounded">
-              <svg
-                className="w-4 h-4 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </button>
+            {/* Inline picker only (no quick duplicates) */}
+            <Popover onOpenChange={setInlinePickerOpen} open={inlinePickerOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  className="p-1 hover:bg-gray-100 rounded"
+                  title="Add reaction"
+                >
+                  <SmilePlus className="w-4 h-4 text-gray-400" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-fit p-0">
+                <EmojiPicker
+                  className="h-[312px]"
+                  onEmojiSelect={(emojiData: {
+                    emoji: string;
+                    label: string;
+                  }) => {
+                    toggleReaction(id, emojiData.emoji);
+                    setInlinePickerOpen(false);
+                  }}
+                >
+                  <EmojiPickerSearch />
+                  <EmojiPickerContent />
+                  <EmojiPickerFooter />
+                </EmojiPicker>
+              </PopoverContent>
+            </Popover>
           </div>
         )}
       </div>
+      <ForwardDialog
+        open={forwardOpen}
+        onOpenChange={setForwardOpen}
+        workspaceId={workspaceId}
+        sourceMessage={{
+          id,
+          avatarUrl,
+          name,
+          time,
+          message,
+          mentions,
+          reactions,
+          hasAttachment,
+          attachmentTitle,
+          attachmentUrl,
+          showQuickView,
+          imageUrl,
+          imageAlt,
+          images,
+          audioUrl,
+          isVoiceMessage,
+          channelId,
+          dmUserId,
+          workspaceId,
+        }}
+      />
+      <ThreadPane
+        open={threadOpen}
+        onOpenChange={setThreadOpen}
+        rootMessageId={id}
+        workspaceId={workspaceId}
+        channelId={channelId}
+        dmUserId={dmUserId}
+      />
     </div>
   );
 }

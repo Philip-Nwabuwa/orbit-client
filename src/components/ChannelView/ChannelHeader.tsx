@@ -1,4 +1,5 @@
 import { useChannelStore } from "@/store/channelStore";
+import { useTypingStore } from "@/store/typingStore";
 import { useMemo } from "react";
 import { Bookmark, Ellipsis, Hash, Info, Lock, Sparkles } from "lucide-react";
 
@@ -13,6 +14,7 @@ export default function ChannelHeader({
   channelId,
 }: ChannelHeaderProps) {
   const { channels } = useChannelStore();
+  const isTyping = useTypingStore((s) => s.isTyping);
 
   // Get current channel info and build breadcrumb path
   const channelInfo = useMemo(() => {
@@ -64,6 +66,11 @@ export default function ChannelHeader({
             </span>
           ))}
         </nav>
+        {isTyping(`w:${channelId}|typing`) && (
+          <span className="ml-3 text-xs text-gray-500 animate-pulse">
+            someone is typing…
+          </span>
+        )}
         <button className="p-1 hover:bg-gray-100 rounded cursor-pointer">
           <Bookmark className="w-4 h-4 text-gray-400" />
         </button>

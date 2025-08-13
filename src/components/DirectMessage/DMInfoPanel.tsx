@@ -1,14 +1,21 @@
 import { useDirectMessagesStore } from "@/store/directMessagesStore";
 import Image from "next/image";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import PinsPanel from "@/components/InfoPanel/PinsPanel";
+import FilesPanel from "@/components/InfoPanel/FilesPanel";
+import LinksPanel from "@/components/InfoPanel/LinksPanel";
 
 interface DMInfoPanelProps {
   dmUserId: string;
   workspaceId: string;
 }
 
-export default function DMInfoPanel({ dmUserId }: DMInfoPanelProps) {
+export default function DMInfoPanel({
+  dmUserId,
+  workspaceId,
+}: DMInfoPanelProps) {
   const { directMessages } = useDirectMessagesStore();
+  const [activeTab, setActiveTab] = useState("info");
 
   // Get current DM user info
   const userInfo = useMemo(() => {
@@ -105,74 +112,122 @@ export default function DMInfoPanel({ dmUserId }: DMInfoPanelProps) {
     },
   ];
 
-  return (
-    <div className="w-80 bg-white border-l border-gray-200 p-6 overflow-y-auto">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">
-        Direct Message Info
-      </h2>
-      <div className="space-y-3">
-        {infoItems.map((item, index) => (
-          <div key={index}>
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center space-x-3">
-                <span className="text-gray-400">{item.icon}</span>
-                <span className="text-gray-600 text-sm">{item.label}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                {item.hasAvatar && item.avatarContent && (
-                  <div className="w-6 h-6 rounded-full overflow-hidden">
-                    <Image
-                      src={item.avatarContent}
-                      alt={userInfo.name}
-                      width={24}
-                      height={24}
-                      className="w-full h-full object-cover"
-                    />
+  const tabs = [
+    { id: "info", label: "Info" },
+    { id: "pins", label: "Pins" },
+    { id: "files", label: "Files" },
+    { id: "links", label: "Links" },
+  ];
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "info":
+        return (
+          <div className="space-y-3">
+            {infoItems.map((item, index) => (
+              <div key={index}>
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-gray-400">{item.icon}</span>
+                    <span className="text-gray-600 text-sm">{item.label}</span>
                   </div>
-                )}
-                {item.isStatus ? (
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      userInfo.isOnline
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                        userInfo.isOnline ? "bg-green-600" : "bg-gray-600"
-                      }`}
-                    ></span>
-                    {item.value}
-                  </span>
-                ) : (
-                  <span className="text-gray-900 text-sm">{item.value}</span>
-                )}
+                  <div className="flex items-center space-x-2">
+                    {item.hasAvatar && item.avatarContent && (
+                      <div className="w-6 h-6 rounded-full overflow-hidden">
+                        <Image
+                          src={item.avatarContent}
+                          alt={userInfo.name}
+                          width={24}
+                          height={24}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    {item.isStatus ? (
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          userInfo.isOnline
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                            userInfo.isOnline ? "bg-green-600" : "bg-gray-600"
+                          }`}
+                        ></span>
+                        {item.value}
+                      </span>
+                    ) : (
+                      <span className="text-gray-900 text-sm">
+                        {item.value}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <div className="mt-8">
+              <h3 className="text-md font-medium text-gray-900 mb-3">
+                Quick Actions
+              </h3>
+              <div className="space-y-2">
+                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                  📱 Call {userInfo.name}
+                </button>
+                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                  📹 Video call
+                </button>
+                <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                  📎 View shared files
+                </button>
+                <button className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                  🚫 Block user
+                </button>
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        );
+      case "pins":
+        return (
+          <PinsPanel channelId={"dm:" + dmUserId} workspaceId={workspaceId} />
+        );
+      case "files":
+        return (
+          <FilesPanel channelId={"dm:" + dmUserId} workspaceId={workspaceId} />
+        );
+      case "links":
+        return (
+          <LinksPanel channelId={"dm:" + dmUserId} workspaceId={workspaceId} />
+        );
+      default:
+        return null;
+    }
+  };
 
-      <div className="mt-8">
-        <h3 className="text-md font-medium text-gray-900 mb-3">
-          Quick Actions
-        </h3>
-        <div className="space-y-2">
-          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-            📱 Call {userInfo.name}
-          </button>
-          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-            📹 Video call
-          </button>
-          <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-            📎 View shared files
-          </button>
-          <button className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-            🚫 Block user
-          </button>
+  return (
+    <div className="w-full max-w-[350px] bg-white border-l border-gray-200 h-full overflow-y-auto">
+      {/* Tab Navigation */}
+      <div className="sticky top-0 bg-white border-b border-gray-200 px-6 pt-4 pb-2">
+        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === tab.id
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
+
+      <div className="p-6">{renderContent()}</div>
     </div>
   );
 }

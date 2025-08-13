@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import InfoPanel from "./InfoPanel";
 import LinkedThreads from "./LinkedThreads";
+import ThreadPane from "@/components/ChannelView/ThreadPane";
 import MembersList from "./MemberList";
 import PinsPanel from "./PinsPanel";
 import FilesPanel from "./FilesPanel";
@@ -11,8 +12,13 @@ interface ChannelSettingsPaneProps {
   workspaceId: string;
 }
 
-export default function ChannelSettingsPane({ channelId, workspaceId }: ChannelSettingsPaneProps) {
+export default function ChannelSettingsPane({
+  channelId,
+  workspaceId,
+}: ChannelSettingsPaneProps) {
   const [activeTab, setActiveTab] = useState("info");
+  const [threadOpen, setThreadOpen] = useState(false);
+  const [activeRootId, setActiveRootId] = useState<string | null>(null);
 
   const tabs = [
     { id: "info", label: "Info" },
@@ -27,7 +33,14 @@ export default function ChannelSettingsPane({ channelId, workspaceId }: ChannelS
         return (
           <div className="space-y-8">
             <InfoPanel channelId={channelId} workspaceId={workspaceId} />
-            <LinkedThreads channelId={channelId} workspaceId={workspaceId} />
+            <LinkedThreads
+              channelId={channelId}
+              workspaceId={workspaceId}
+              onOpenThread={(rootId) => {
+                setActiveRootId(rootId);
+                setThreadOpen(true);
+              }}
+            />
             <MembersList channelId={channelId} workspaceId={workspaceId} />
           </div>
         );
@@ -64,6 +77,15 @@ export default function ChannelSettingsPane({ channelId, workspaceId }: ChannelS
       </div>
 
       <div className="p-6">{renderContent()}</div>
+      {activeRootId && (
+        <ThreadPane
+          open={threadOpen}
+          onOpenChange={setThreadOpen}
+          rootMessageId={activeRootId}
+          workspaceId={workspaceId}
+          channelId={channelId}
+        />
+      )}
     </div>
   );
 }

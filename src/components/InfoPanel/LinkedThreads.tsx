@@ -1,13 +1,29 @@
+import { useMessageStore } from "@/store/messageStore";
+import Image from "next/image";
+
 interface LinkedThreadsProps {
   channelId: string;
   workspaceId: string;
+  onOpenThread?: (rootMessageId: string) => void;
 }
 
-export default function LinkedThreads({ channelId, workspaceId }: LinkedThreadsProps) {
-  const threads = [
-    { id: "1", name: "Front-end", count: 4 },
-    { id: "2", name: "UI-kit design standards", count: null },
-  ];
+export default function LinkedThreads({
+  channelId,
+  workspaceId,
+  onOpenThread,
+}: LinkedThreadsProps) {
+  const { messages, getThreadCount } = useMessageStore();
+  const roots = messages.filter(
+    (m) =>
+      m.channelId === channelId &&
+      m.workspaceId === workspaceId &&
+      !m.threadRootId
+  );
+  const threadRoots = roots
+    .map((m) => ({ root: m, count: getThreadCount(m.id) }))
+    .filter((t) => t.count > 0);
+
+  if (threadRoots.length === 0) return null;
 
   return (
     <div>
@@ -15,19 +31,29 @@ export default function LinkedThreads({ channelId, workspaceId }: LinkedThreadsP
         Linked threads
       </h2>
       <div className="space-y-2">
-        {threads.map((thread) => (
-          <div
-            key={thread.id}
-            className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 cursor-pointer"
+        {threadRoots.map(({ root, count }) => (
+          <button
+            key={root.id}
+            onClick={() => onOpenThread?.(root.id)}
+            className="w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50"
           >
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-500">#</span>
-              <span className="text-gray-700 text-sm">{thread.name}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Image
+                src={root.avatarUrl}
+                alt={root.name}
+                width={20}
+                height={20}
+                className="rounded"
+              />
+              <span className="text-blue-600 text-sm truncate">
+                {count} reply{count === 1 ? "" : "ies"}
+              </span>
+              <span className="text-gray-600 text-sm truncate">
+                View thread
+              </span>
             </div>
-            {thread.count && (
-              <span className="text-gray-500 text-sm">{thread.count}</span>
-            )}
-          </div>
+            <span className="text-gray-400">›</span>
+          </button>
         ))}
       </div>
     </div>

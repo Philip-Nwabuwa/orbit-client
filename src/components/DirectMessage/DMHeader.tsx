@@ -1,6 +1,7 @@
 import { useDirectMessagesStore } from "@/store/directMessagesStore";
 import Image from "next/image";
 import { useMemo } from "react";
+import { useTypingStore } from "@/store/typingStore";
 
 interface DMHeaderProps {
   onToggleSettings: () => void;
@@ -13,6 +14,7 @@ export default function DMHeader({
   dmUserId,
 }: DMHeaderProps) {
   const { directMessages } = useDirectMessagesStore();
+  const isTyping = useTypingStore((s) => s.isTyping);
 
   // Get current DM user info
   const userInfo = useMemo(() => {
@@ -57,7 +59,11 @@ export default function DMHeader({
             {userInfo.name}
           </h2>
           <p className="text-sm text-gray-500">
-            {userInfo.isOnline ? "Active now" : "Away"}
+            {isTyping(`w:dm:${dmUserId}|typing`)
+              ? "typing…"
+              : userInfo.isOnline
+              ? "Active now"
+              : "Away"}
           </p>
         </div>
       </div>

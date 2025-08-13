@@ -27,10 +27,16 @@ export interface MessageItemModel {
   channelId?: string;
   dmUserId?: string;
   workspaceId: string;
+  // Threading
+  threadRootId?: string; // If present, this message is a reply in the thread
 }
 
 interface MessageState {
   messages: MessageItemModel[];
+  // Pagination state
+  channelPaginationState: Record<string, { hasMore: boolean; isLoading: boolean; offset: number }>;
+  dmPaginationState: Record<string, { hasMore: boolean; isLoading: boolean; offset: number }>;
+  
   initializeMessages: () => void;
   addMessage: (message: MessageItemModel) => void;
   updateMessage: (id: string, updates: Partial<MessageItemModel>) => void;
@@ -44,13 +50,35 @@ interface MessageState {
   ) => MessageItemModel[];
   initializeChannelMessages: (channelId: string, workspaceId: string) => void;
   initializeDMMessages: (dmUserId: string, workspaceId: string) => void;
+  // Pagination
+  loadMoreChannelMessages: (channelId: string, workspaceId: string) => Promise<void>;
+  loadMoreDMMessages: (dmUserId: string, workspaceId: string) => Promise<void>;
+  getChannelPaginationState: (channelId: string, workspaceId: string) => { hasMore: boolean; isLoading: boolean };
+  getDMPaginationState: (dmUserId: string, workspaceId: string) => { hasMore: boolean; isLoading: boolean };
+  
   addReaction: (messageId: string, emoji: string) => void;
   removeReaction: (messageId: string, emoji: string) => void;
   toggleReaction: (messageId: string, emoji: string) => void;
+  // Threads
+  getThreadMessages: (threadRootId: string) => MessageItemModel[];
+  getThreadCount: (threadRootId: string) => number;
+  addThreadReply: (
+    threadRootId: string,
+    content: string,
+    context: {
+      workspaceId: string;
+      channelId?: string;
+      dmUserId?: string;
+      authorName?: string;
+      avatarUrl?: string;
+    }
+  ) => void;
 }
 
 export const useMessageStore = create<MessageState>((set, get) => ({
   messages: [],
+  channelPaginationState: {},
+  dmPaginationState: {},
 
   // Legacy method - kept for compatibility
   initializeMessages: () => {
@@ -144,7 +172,176 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       state.addReaction(messageId, emoji);
     }
   },
+
+  // Thread helpers
+  getThreadMessages: (threadRootId: string) =>
+    get().messages.filter((m) => m.threadRootId === threadRootId),
+  getThreadCount: (threadRootId: string) =>
+    get().messages.filter((m) => m.threadRootId === threadRootId).length,
+  addThreadReply: (
+    threadRootId: string,
+    content: string,
+    context: {
+      workspaceId: string;
+      channelId?: string;
+      dmUserId?: string;
+      authorName?: string;
+      avatarUrl?: string;
+    }
+  ) => {
+    const id = `msg-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    set((state) => ({
+      messages: [
+        ...state.messages,
+        {
+          id,
+          avatarUrl: context.avatarUrl || avatarUrl.src,
+          name: context.authorName || "You",
+          time: "now",
+          message: content,
+          mentions: [],
+          reactions: [],
+          workspaceId: context.workspaceId,
+          channelId: context.channelId,
+          dmUserId: context.dmUserId,
+          threadRootId,
+        },
+      ],
+    }));
+  },
+
+  // Pagination methods
+  loadMoreChannelMessages: async (channelId: string, workspaceId: string) => {
+    const key = `${workspaceId}-${channelId}`;
+    const currentState = get().channelPaginationState[key];
+    
+    if (currentState?.isLoading || !currentState?.hasMore) return;
+    
+    // Set loading state
+    set((state) => ({
+      channelPaginationState: {
+        ...state.channelPaginationState,
+        [key]: { ...currentState, isLoading: true },
+      },
+    }));
+    
+    // Simulate loading older messages (in real app, this would be an API call)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const olderMessages = generateOlderChannelMessages(channelId, workspaceId, currentState?.offset || 0);
+    
+    set((state) => ({
+      messages: [...olderMessages, ...state.messages],
+      channelPaginationState: {
+        ...state.channelPaginationState,
+        [key]: {
+          hasMore: olderMessages.length === 20, // Has more if we got a full batch
+          isLoading: false,
+          offset: (currentState?.offset || 0) + olderMessages.length,
+        },
+      },
+    }));
+  },
+
+  loadMoreDMMessages: async (dmUserId: string, workspaceId: string) => {
+    const key = `${workspaceId}-${dmUserId}`;
+    const currentState = get().dmPaginationState[key];
+    
+    if (currentState?.isLoading || !currentState?.hasMore) return;
+    
+    // Set loading state
+    set((state) => ({
+      dmPaginationState: {
+        ...state.dmPaginationState,
+        [key]: { ...currentState, isLoading: true },
+      },
+    }));
+    
+    // Simulate loading older messages
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const olderMessages = generateOlderDMMessages(dmUserId, workspaceId, currentState?.offset || 0);
+    
+    set((state) => ({
+      messages: [...olderMessages, ...state.messages],
+      dmPaginationState: {
+        ...state.dmPaginationState,
+        [key]: {
+          hasMore: olderMessages.length === 20,
+          isLoading: false,
+          offset: (currentState?.offset || 0) + olderMessages.length,
+        },
+      },
+    }));
+  },
+
+  getChannelPaginationState: (channelId: string, workspaceId: string) => {
+    const key = `${workspaceId}-${channelId}`;
+    const state = get().channelPaginationState[key];
+    return state || { hasMore: true, isLoading: false };
+  },
+
+  getDMPaginationState: (dmUserId: string, workspaceId: string) => {
+    const key = `${workspaceId}-${dmUserId}`;
+    const state = get().dmPaginationState[key];
+    return state || { hasMore: true, isLoading: false };
+  },
 }));
+
+// Helper functions for generating older messages
+function generateOlderChannelMessages(
+  channelId: string,
+  workspaceId: string,
+  offset: number
+): MessageItemModel[] {
+  const messages: MessageItemModel[] = [];
+  const now = new Date();
+  
+  for (let i = 0; i < 20; i++) {
+    const messageDate = new Date(now.getTime() - (offset + i + 1) * 24 * 60 * 60 * 1000); // Each message is from a different day in the past
+    const id = `${channelId}-older-${offset + i}`;
+    
+    messages.push({
+      id,
+      avatarUrl: avatarUrl.src,
+      name: `User ${(offset + i) % 5 + 1}`,
+      time: messageDate.toLocaleDateString(),
+      message: `This is an older message from ${messageDate.toDateString()}. Message #${offset + i + 1}`,
+      reactions: [],
+      channelId,
+      workspaceId,
+    });
+  }
+  
+  return messages.reverse(); // Older messages first
+}
+
+function generateOlderDMMessages(
+  dmUserId: string,
+  workspaceId: string,
+  offset: number
+): MessageItemModel[] {
+  const messages: MessageItemModel[] = [];
+  const now = new Date();
+  
+  for (let i = 0; i < 20; i++) {
+    const messageDate = new Date(now.getTime() - (offset + i + 1) * 24 * 60 * 60 * 1000);
+    const id = `dm-${dmUserId}-older-${offset + i}`;
+    
+    messages.push({
+      id,
+      avatarUrl: avatarUrl.src,
+      name: i % 2 === 0 ? `DM Partner` : "You",
+      time: messageDate.toLocaleDateString(),
+      message: `DM message from ${messageDate.toDateString()}. Message #${offset + i + 1}`,
+      reactions: [],
+      dmUserId,
+      workspaceId,
+    });
+  }
+  
+  return messages.reverse();
+}
 
 // Sample data generators
 function getChannelSampleMessages(

@@ -2,7 +2,7 @@
 "use client";
 
 import avatarUrl from "@/assets/images/hero.jpeg";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useMessageStore } from "@/store/messageStore";
 import {
@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/popover";
 import VoiceRecorder from "@/components/common/VoiceRecorder";
 import { makeConversationKey, useDraftStore } from "@/store/draftStore";
+import { useTypingStore } from "@/store/typingStore";
+import { useMemberStore } from "@/store/memberStore";
 interface Member {
   id: string;
   name: string;
@@ -51,7 +53,13 @@ export default function MessageComposer({
   >([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pingTyping = useTypingStore((s) => s.pingTyping);
   const draftKey = makeConversationKey(workspaceId, channelId, dmUserId);
+  const typingKey = dmUserId
+    ? `w:dm:${dmUserId}|typing`
+    : channelId
+    ? `w:${channelId}|typing`
+    : draftKey;
 
   // Load draft on mount / conversation change
   useEffect(() => {
@@ -64,10 +72,23 @@ export default function MessageComposer({
     setDraft(draftKey, message);
   }, [draftKey, message, setDraft]);
 
-  const members: Member[] = [
-    { id: "1", name: "Diana Taylor", avatarUrl: avatarUrl.src },
-    { id: "2", name: "Daniel Anderson", avatarUrl: avatarUrl.src },
-  ];
+  const initMembers = useMemberStore((s) => s.initializeMembers);
+  const membersFromStore = useMemberStore((s) => s.members);
+  useEffect(() => {
+    if (membersFromStore.length === 0) initMembers();
+  }, [membersFromStore.length, initMembers]);
+  const members: Member[] = useMemo(() => {
+    return membersFromStore.length
+      ? membersFromStore.map((m) => ({
+          id: m.id,
+          name: m.name,
+          avatarUrl: m.avatarUrl,
+        }))
+      : [
+          { id: "1", name: "Diana Taylor", avatarUrl: avatarUrl.src },
+          { id: "2", name: "Daniel Anderson", avatarUrl: avatarUrl.src },
+        ];
+  }, [membersFromStore]);
 
   const filteredMembers = members.filter((member) =>
     member.name.toLowerCase().includes(mentionSearch.toLowerCase())
@@ -88,6 +109,8 @@ export default function MessageComposer({
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
     setCursorPosition(e.target.selectionStart);
+    // Ping typing for this conversation key
+    pingTyping(typingKey);
   };
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -111,6 +134,19 @@ export default function MessageComposer({
       textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
     }
   };
+
+  // Show mention list only when '@' starts a token (start of line or after whitespace)
+  useEffect(() => {
+    const left = message.slice(0, cursorPosition);
+    const match = left.match(/(?:^|\s)@(\w*)$/);
+    if (match) {
+      setShowMentions(true);
+      setMentionSearch(match[1] || "");
+    } else {
+      setShowMentions(false);
+      setMentionSearch("");
+    }
+  }, [message, cursorPosition]);
 
   const handleFileAttachment = () => {
     fileInputRef.current?.click();
@@ -298,11 +334,11 @@ export default function MessageComposer({
 
       {/* Mention Dropdown */}
       {showMentions && (
-        <div className="absolute bottom-full left-6 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[200px] max-w-xs">
+        <div className="absolute bottom-full left-6 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[240px] max-w-sm">
           <div className="px-3 py-1 text-sm font-medium text-gray-500 border-b border-gray-100">
             Members
           </div>
-          <div className="py-1">
+          <div className="py-1 max-h-60 overflow-auto">
             {filteredMembers.map((member) => (
               <button
                 key={member.id}
@@ -320,7 +356,10 @@ export default function MessageComposer({
                 ) : member.emoji ? (
                   <span className="text-xl">{member.emoji}</span>
                 ) : null}
-                <span className="text-sm text-gray-700">@{member.name}</span>
+                <div className="flex flex-col">
+                  <span className="text-sm text-gray-700">@{member.name}</span>
+                  <span className="text-[11px] text-gray-400">{member.id}</span>
+                </div>
               </button>
             ))}
           </div>
