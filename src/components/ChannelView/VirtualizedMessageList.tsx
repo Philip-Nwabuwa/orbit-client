@@ -6,7 +6,7 @@ import ConversationIntro from "./ConversationIntro";
 import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useMessageStore } from "@/store/messageStore";
 import { groupMessagesByDay, MessageListItem } from "@/lib/messageUtils";
-import { FixedSizeList as List } from "react-window";
+import { VariableSizeList as List } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
 
 interface VirtualizedMessageListProps {
@@ -284,6 +284,7 @@ export default function VirtualizedMessageList({
                   ref(list);
                 }}
                 height={containerHeight}
+                width="100%"
                 itemCount={allItems.length}
                 itemSize={getItemSize}
                 itemData={itemData}
