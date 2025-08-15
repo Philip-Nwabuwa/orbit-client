@@ -45,7 +45,7 @@ export default function InboxPage({
       .map((m) => ({
         id: m.id,
         preview: m.message || (m.isVoiceMessage ? "Voice message" : ""),
-        source: m.channelId ? "Channel" : "Direct Message",
+        source: (m.channelId ? "Channel" : "Direct Message") as "Channel" | "Direct Message",
         channelId: m.channelId,
         dmUserId: m.dmUserId,
         time: m.time,

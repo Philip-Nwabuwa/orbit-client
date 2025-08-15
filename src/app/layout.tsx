@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../styles/globals.css";
-import AppDock from "@/components/AppDock/AppDock";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,6 +12,9 @@ export const metadata: Metadata = {
   title: "Collabix - Team Collaboration",
   description:
     "Modern team collaboration platform for seamless communication and project management",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -24,7 +26,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         suppressHydrationWarning
-        className={`${inter.variable} font-sans antialiased bg-background text-foreground overflow-hidden`}
+        className={`${inter.variable} font-sans antialiased bg-background text-foreground`}
       >
         {children}
       </body>
